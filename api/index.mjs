@@ -2,8 +2,6 @@
 // This creates a lightweight Express app specifically for Vercel
 import express from 'express';
 import cors from 'cors';
-import config from '../server/config.js';
-import { supabase } from '../server/database/init.js';
 
 import authRoutes from '../server/routes/auth.routes.js';
 import aspirasiRoutes from '../server/routes/aspirasi.routes.js';
@@ -32,19 +30,25 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Temporary debug endpoint to diagnose Supabase connection
+// Temporary debug endpoint using inline Supabase client
 app.get('/api/debug', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { createClient } = await import('@supabase/supabase-js');
+    const url = process.env.SUPABASE_URL || 'https://hhbtrwrllydowupqwrku.supabase.co';
+    const key = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYnRyd3JsbHlkb3d1cHF3cmt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MjU5NTQsImV4cCI6MjA4OTAwMTk1NH0.NrNnqmwzjFHbWndCzcOEGybasAVV5g_UKEQtxkjC0r0';
+    const sb = createClient(url, key);
+
+    const { data, error } = await sb
       .from('dprd_members')
       .select('id, name')
       .limit(1);
 
     res.json({
       env: {
-        SUPABASE_URL: config.SUPABASE_URL ? '✅ Set' : '❌ Missing',
-        SUPABASE_KEY: config.SUPABASE_KEY ? `✅ Set (starts with ${config.SUPABASE_KEY.substring(0, 10)}...)` : '❌ Missing',
-        JWT_SECRET: config.JWT_SECRET ? '✅ Set' : '❌ Missing',
+        SUPABASE_URL_set: !!process.env.SUPABASE_URL,
+        SUPABASE_KEY_set: !!process.env.SUPABASE_KEY,
+        SUPABASE_KEY_starts: key.substring(0, 10),
+        JWT_SECRET_set: !!process.env.JWT_SECRET,
         VERCEL: process.env.VERCEL || 'not set'
       },
       supabase_test: error ? { error: error.message, code: error.code, details: error.details, hint: error.hint } : { success: true, data }
