@@ -38,15 +38,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Serve frontend (production local)
-app.use(express.static(path.join(__dirname, '..', 'dist')));
+// Serve frontend (production local only, NOT on Vercel)
+// Vercel handles static files separately via its CDN
+if (!process.env.VERCEL) {
+  app.use(express.static(path.join(__dirname, '..', 'dist')));
 
-// SPA fallback - semua route non-API diarahkan ke index.html
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
-    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
-  }
-});
+  // SPA fallback - semua route non-API diarahkan ke index.html
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+      res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
+    }
+  });
+}
 
 app.use(errorHandler);
 

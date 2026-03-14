@@ -1,14 +1,8 @@
 // Login Page
 import { api, setAuth, navigate, showToast } from '../main.js';
 
-export async function renderLogin(container) {
-  // Fetch DPRD members for dropdown
-  let members = [];
-  try {
-    const res = await api('/dprd-members');
-    if (res?.success) members = res.data;
-  } catch (e) { /* server might not be running */ }
-
+export function renderLogin(container) {
+  // Render UI immediately, fetch DPRD members in background
   container.innerHTML = `
     <div class="login-page">
       <div class="login-card">
@@ -33,8 +27,7 @@ export async function renderLogin(container) {
           <div class="form-group" id="dprdGroup">
             <label class="form-label">Anggota DPRD</label>
             <select class="form-select" id="dprdSelect">
-              <option value="">Pilih Anggota DPRD...</option>
-              ${members.map(m => `<option value="${m.id}">${m.name}</option>`).join('')}
+              <option value="">Memuat data...</option>
             </select>
           </div>
 
@@ -141,5 +134,19 @@ export async function renderLogin(container) {
 
     loginBtn.disabled = false;
     loginBtn.textContent = '🔑 MASUK';
+  });
+
+  // Fetch DPRD members in background (non-blocking)
+  api('/dprd-members').then(res => {
+    const select = document.getElementById('dprdSelect');
+    if (select && res?.success && res.data) {
+      select.innerHTML = '<option value="">Pilih Anggota DPRD...</option>' +
+        res.data.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    } else if (select) {
+      select.innerHTML = '<option value="">Pilih Anggota DPRD...</option>';
+    }
+  }).catch(() => {
+    const select = document.getElementById('dprdSelect');
+    if (select) select.innerHTML = '<option value="">Gagal memuat data</option>';
   });
 }
