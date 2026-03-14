@@ -1,5 +1,11 @@
 {
   "version": 2,
+  "functions": {
+    "api/index.mjs": {
+      "includeFiles": "server/**",
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
