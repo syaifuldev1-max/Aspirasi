@@ -84,7 +84,10 @@ export async function renderDaftarAspirasi(container) {
     const content = `
       <div class="flex-between mb-md">
         <h3>📋 Total: ${total || 0} aspirasi</h3>
-        <a href="#/input" class="btn btn-primary">➕ Tambah Baru</a>
+        <div class="flex gap-sm">
+          ${isSuperAdmin ? '<button class="btn btn-sm btn-gold" id="exportCsvBtn">📥 Export CSV</button>' : ''}
+          <a href="#/input" class="btn btn-primary">➕ Tambah Baru</a>
+        </div>
       </div>
 
       <div class="filter-bar">
@@ -371,6 +374,72 @@ export async function renderDaftarAspirasi(container) {
         currentPage = parseInt(btn.dataset.page);
         render();
       });
+    });
+
+    // Export CSV button
+    document.getElementById('exportCsvBtn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('exportCsvBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Mengunduh...';
+
+      try {
+        // Fetch ALL data (no pagination limit)
+        const params = new URLSearchParams({ page: 1, limit: 9999 });
+        if (filters.type) params.set('type', filters.type);
+        if (filters.fiscal_year) params.set('fiscal_year', filters.fiscal_year);
+        if (filters.search) params.set('search', filters.search);
+        if (filters.status) params.set('status', filters.status);
+        if (filters.dprd_member_id) params.set('dprd_member_id', filters.dprd_member_id);
+
+        const res = await api(`/aspirasi?${params}`);
+        const allData = res?.data || [];
+
+        if (allData.length === 0) {
+          showToast('Tidak ada data untuk diekspor', 'error');
+          btn.disabled = false;
+          btn.textContent = '📥 Export CSV';
+          return;
+        }
+
+        // Build CSV with semicolon separator (better Excel support)
+        const sep = ';';
+        const headers = ['No', 'Referensi', 'Pengusul', 'No HP', 'Alamat', 'Anggota DPRD', 'Tipe', 'Isi Usulan', 'Anggaran', 'Status', 'Tanggal'];
+        let csv = '\uFEFF'; // BOM for Excel UTF-8
+        csv += headers.join(sep) + '\n';
+
+        allData.forEach((a, i) => {
+          const row = [
+            i + 1,
+            a.reference_no || '',
+            (a.proposer_name || '').replace(/;/g, ','),
+            a.proposer_phone || '',
+            (a.proposer_address || '').replace(/;/g, ',').replace(/\n/g, ' '),
+            (a.dprd_name || '-').replace(/;/g, ','),
+            a.type === 'penetapan' ? 'Penetapan' : 'Perubahan',
+            (a.description || '').replace(/;/g, ',').replace(/\n/g, ' '),
+            a.budget_amount || 0,
+            a.status || 'draft',
+            new Date(a.created_at).toLocaleDateString('id-ID')
+          ];
+          csv += row.join(sep) + '\n';
+        });
+
+        // Download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `aspirasi_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showToast('CSV berhasil diunduh ✅');
+      } catch (err) {
+        showToast('Gagal mengekspor data', 'error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = '📥 Export CSV';
     });
   }
 
