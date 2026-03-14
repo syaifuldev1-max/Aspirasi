@@ -2,6 +2,8 @@
 // This creates a lightweight Express app specifically for Vercel
 import express from 'express';
 import cors from 'cors';
+import config from '../server/config.js';
+import { supabase } from '../server/database/init.js';
 
 import authRoutes from '../server/routes/auth.routes.js';
 import aspirasiRoutes from '../server/routes/aspirasi.routes.js';
@@ -33,9 +35,6 @@ app.get('/api/health', (req, res) => {
 // Temporary debug endpoint to diagnose Supabase connection
 app.get('/api/debug', async (req, res) => {
   try {
-    const { supabase } = await import('../server/database/init.js');
-    const config = (await import('../server/config.js')).default;
-
     const { data, error } = await supabase
       .from('dprd_members')
       .select('id, name')
@@ -48,7 +47,7 @@ app.get('/api/debug', async (req, res) => {
         JWT_SECRET: config.JWT_SECRET ? '✅ Set' : '❌ Missing',
         VERCEL: process.env.VERCEL || 'not set'
       },
-      supabase_test: error ? { error: error.message, code: error.code, details: error.details } : { success: true, data }
+      supabase_test: error ? { error: error.message, code: error.code, details: error.details, hint: error.hint } : { success: true, data }
     });
   } catch (err) {
     res.json({ crash: err.message, stack: err.stack?.substring(0, 500) });
