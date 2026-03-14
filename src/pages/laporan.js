@@ -6,6 +6,16 @@ export async function renderLaporan(container) {
   const isSuperAdmin = user?.role === 'superadmin';
   const year = new Date().getFullYear();
 
+  // Show loading spinner immediately
+  container.innerHTML = renderLayout('Laporan', '📊', `
+    <div class="loading-screen">
+      <div class="loading-spinner"></div>
+      <p>Memuat data laporan...</p>
+    </div>
+  `);
+  bindLayoutEvents();
+
+  // Fetch data in background
   let summary = {}, comparison = [], byDprd = [];
   try {
     const [sumRes, compRes, dprdRes] = await Promise.all([

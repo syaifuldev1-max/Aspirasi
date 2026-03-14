@@ -5,8 +5,19 @@ export async function renderDashboard(container) {
   const { user } = getAuth();
   const isSuperAdmin = user?.role === 'superadmin';
   const year = new Date().getFullYear();
+  const pageTitle = isSuperAdmin ? 'Super Admin Dashboard' : `Dashboard — ${user?.dprdMember?.name || ''}`;
+  const icon = isSuperAdmin ? '👑' : '🏠';
 
-  // Fetch data
+  // Show loading spinner immediately
+  container.innerHTML = renderLayout(pageTitle, icon, `
+    <div class="loading-screen">
+      <div class="loading-spinner"></div>
+      <p>Memuat data dashboard...</p>
+    </div>
+  `);
+  bindLayoutEvents();
+
+  // Fetch data in background
   let summary = {}, monthly = [], aspirasi = [];
   try {
     const [sumRes, monthRes, aspRes] = await Promise.all([
@@ -67,9 +78,6 @@ export async function renderDashboard(container) {
       <td class="text-secondary text-sm">${new Date(a.created_at).toLocaleDateString('id-ID')}</td>
     </tr>
   `).join('') : `<tr><td colspan="${isSuperAdmin ? 7 : 6}" style="text-align:center;padding:30px;">Belum ada data aspirasi</td></tr>`;
-
-  const pageTitle = isSuperAdmin ? 'Super Admin Dashboard' : `Dashboard — ${user?.dprdMember?.name || ''}`;
-  const icon = isSuperAdmin ? '👑' : '🏠';
 
   const content = `
     <div class="summary-grid">

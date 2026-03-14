@@ -5,6 +5,15 @@ export async function renderDaftarAspirasi(container) {
   const { user } = getAuth();
   const isSuperAdmin = user?.role === 'superadmin';
 
+  // Show loading spinner immediately
+  container.innerHTML = renderLayout('Daftar Aspirasi', '📋', `
+    <div class="loading-screen">
+      <div class="loading-spinner"></div>
+      <p>Memuat data aspirasi...</p>
+    </div>
+  `);
+  bindLayoutEvents();
+
   // Fetch DPRD members for filter + edit (super admin only)
   let members = [];
   if (isSuperAdmin) {
