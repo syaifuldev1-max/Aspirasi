@@ -1,23 +1,9 @@
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 import config from '../config.js';
 
-// Ensure upload directory exists
-if (!fs.existsSync(config.UPLOAD_DIR)) {
-  fs.mkdirSync(config.UPLOAD_DIR, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, config.UPLOAD_DIR);
-  },
-  filename: (req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    cb(null, `${unique}${ext}`);
-  }
-});
+// Use Memory Storage for Vercel/Supabase since local filesystem is ephemeral
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const allowed = /jpeg|jpg|png|webp/;

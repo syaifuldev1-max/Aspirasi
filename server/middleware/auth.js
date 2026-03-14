@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import config from '../config.js';
-import { queryOne } from '../database/init.js';
+import { supabase } from '../database/init.js';
 
-export function authMiddleware(req, res, next) {
+export async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -17,20 +17,21 @@ export function authMiddleware(req, res, next) {
   try {
     const decoded = jwt.verify(token, config.JWT_SECRET);
 
-    const user = queryOne(`
-      SELECT u.id, u.username, u.full_name, u.role, u.dprd_member_id,
-             dm.name as dprd_name
-      FROM users u
-      LEFT JOIN dprd_members dm ON u.dprd_member_id = dm.id
-      WHERE u.id = ?
-    `, [decoded.id]);
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, full_name, role, dprd_member_id, dprd_members(name)')
+      .eq('id', decoded.id)
+      .maybeSingle();
 
-    if (!user) {
+    if (error || !user) {
       return res.status(401).json({
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'User tidak ditemukan' }
       });
     }
+    
+    // Add backward compatibility for dprd_name field
+    user.dprd_name = user.dprd_members?.name || null;
 
     req.user = user;
     next();
