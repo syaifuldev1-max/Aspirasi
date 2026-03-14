@@ -58,13 +58,16 @@ CREATE INDEX IF NOT EXISTS idx_aspirasi_ref ON public.aspirasi(reference_no);
 CREATE INDEX IF NOT EXISTS idx_photos_aspirasi ON public.photos(aspirasi_id);
 
 -- 3. Insert Initial Data (Superadmin & DPRD Members from seed)
--- Using ON CONFLICT to avoid errors if run multiple times
+-- Using ON CONFLICT DO UPDATE to forcefully overwrite any old dummy data
 INSERT INTO public.dprd_members (id, name, party, phone) VALUES 
   (1, 'Basuki, S.E', 'PAN', '-'),
   (2, 'Widodo, S.H', 'PAN', '-'),
   (3, 'Purwanto, S.H', 'PAN', '-'),
   (4, 'Alex Fitroh Hadi Pornomo', 'PAN', '-')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET 
+  name = EXCLUDED.name,
+  party = EXCLUDED.party,
+  phone = EXCLUDED.phone;
 
 -- NOTE: password is 'pan123' for all early accounts
 INSERT INTO public.users (id, username, full_name, role, password_hash, dprd_member_id)
@@ -74,7 +77,12 @@ VALUES
   (3, 'widodo.admin', 'Admin Widodo', 'admin', '$2a$10$wJt0FwB1V6gNzvP2T5K3xOnrR.q.yZ4oPxg1H2yI9A1K4qZ.M0O5W', 2),
   (4, 'purwanto.admin', 'Admin Purwanto', 'admin', '$2a$10$wJt0FwB1V6gNzvP2T5K3xOnrR.q.yZ4oPxg1H2yI9A1K4qZ.M0O5W', 3),
   (5, 'alex.admin', 'Admin Alex Fitroh', 'admin', '$2a$10$wJt0FwB1V6gNzvP2T5K3xOnrR.q.yZ4oPxg1H2yI9A1K4qZ.M0O5W', 4)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  username = EXCLUDED.username,
+  full_name = EXCLUDED.full_name,
+  role = EXCLUDED.role,
+  password_hash = EXCLUDED.password_hash,
+  dprd_member_id = EXCLUDED.dprd_member_id;
 
 -- Resync the ID sequences to prevent insertion conflicts
 SELECT setval('public.dprd_members_id_seq', (SELECT MAX(id) FROM public.dprd_members));
