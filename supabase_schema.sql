@@ -72,11 +72,11 @@ ON CONFLICT (id) DO UPDATE SET
 -- NOTE: password is 'pan123' for all early accounts
 INSERT INTO public.users (id, username, full_name, role, password_hash, dprd_member_id)
 VALUES 
-  (1, 'pan.admin', 'Super Administrator', 'superadmin', '$2a$10$wJt0FwB1V6gNzvP2T5K3xOnrR.q.yZ4oPxg1H2yI9A1K4qZ.M0O5W', NULL),
-  (2, 'basuki.admin', 'Admin Basuki', 'admin', '$2a$10$wJt0FwB1V6gNzvP2T5K3xOnrR.q.yZ4oPxg1H2yI9A1K4qZ.M0O5W', 1),
-  (3, 'widodo.admin', 'Admin Widodo', 'admin', '$2a$10$wJt0FwB1V6gNzvP2T5K3xOnrR.q.yZ4oPxg1H2yI9A1K4qZ.M0O5W', 2),
-  (4, 'purwanto.admin', 'Admin Purwanto', 'admin', '$2a$10$wJt0FwB1V6gNzvP2T5K3xOnrR.q.yZ4oPxg1H2yI9A1K4qZ.M0O5W', 3),
-  (5, 'alex.admin', 'Admin Alex Fitroh', 'admin', '$2a$10$wJt0FwB1V6gNzvP2T5K3xOnrR.q.yZ4oPxg1H2yI9A1K4qZ.M0O5W', 4)
+  (1, 'pan.admin', 'Super Administrator', 'superadmin', '$2a$10$0e9W.k.IYlc2DU3SwNwMBugQzoi1FHvQbXmIdv4hE6Equ9vw/0ZaO', NULL),
+  (2, 'basuki.admin', 'Admin Basuki', 'admin', '$2a$10$0e9W.k.IYlc2DU3SwNwMBugQzoi1FHvQbXmIdv4hE6Equ9vw/0ZaO', 1),
+  (3, 'widodo.admin', 'Admin Widodo', 'admin', '$2a$10$0e9W.k.IYlc2DU3SwNwMBugQzoi1FHvQbXmIdv4hE6Equ9vw/0ZaO', 2),
+  (4, 'purwanto.admin', 'Admin Purwanto', 'admin', '$2a$10$0e9W.k.IYlc2DU3SwNwMBugQzoi1FHvQbXmIdv4hE6Equ9vw/0ZaO', 3),
+  (5, 'alex.admin', 'Admin Alex Fitroh', 'admin', '$2a$10$0e9W.k.IYlc2DU3SwNwMBugQzoi1FHvQbXmIdv4hE6Equ9vw/0ZaO', 4)
 ON CONFLICT (id) DO UPDATE SET
   username = EXCLUDED.username,
   full_name = EXCLUDED.full_name,
