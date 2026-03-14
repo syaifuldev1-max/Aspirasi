@@ -30,6 +30,31 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Temporary debug endpoint to diagnose Supabase connection
+app.get('/api/debug', async (req, res) => {
+  try {
+    const { supabase } = await import('../server/database/init.js');
+    const config = (await import('../server/config.js')).default;
+
+    const { data, error } = await supabase
+      .from('dprd_members')
+      .select('id, name')
+      .limit(1);
+
+    res.json({
+      env: {
+        SUPABASE_URL: config.SUPABASE_URL ? '✅ Set' : '❌ Missing',
+        SUPABASE_KEY: config.SUPABASE_KEY ? `✅ Set (starts with ${config.SUPABASE_KEY.substring(0, 10)}...)` : '❌ Missing',
+        JWT_SECRET: config.JWT_SECRET ? '✅ Set' : '❌ Missing',
+        VERCEL: process.env.VERCEL || 'not set'
+      },
+      supabase_test: error ? { error: error.message, code: error.code, details: error.details } : { success: true, data }
+    });
+  } catch (err) {
+    res.json({ crash: err.message, stack: err.stack?.substring(0, 500) });
+  }
+});
+
 app.use(errorHandler);
 
 export default app;
